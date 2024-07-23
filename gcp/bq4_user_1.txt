@@ -1,0 +1,30 @@
+select
+    -- user_id (dimension | the user id set via the setUserId api)
+    user_id,
+    -- user_pseudo_id (dimension | the pseudonymous id (e.g., app instance id) for the user)
+    user_pseudo_id,
+    -- user_first_touch_timestamp (dimension | the time (in microseconds) at which the user first opened the app/website)
+    timestamp_micros(user_first_touch_timestamp) as user_first_touch_timestamp,
+    -- user_properties.key (dimension | the name of the user property | replace <insert key> with a parameter key or delete where clause to select all)
+    (select key from unnest(user_properties) where key = '<insert key>') as user_properties_key,
+    -- user_properties.value.string_value (dimension | the string value of the user property | replace <insert key> with a parameter key or delete where clause to select all)
+    (select value.string_value from unnest(user_properties) where key = '<insert key>') as user_string_value,
+    -- user_properties.value.int_value (metric | the integer value of the user property | replace <insert key> with a parameter key or delete where clause to select all)
+    (select value.int_value from unnest(user_properties) where key = '<insert key>') as user_int_value,
+    -- user_properties.value.float_value (metric | the float value of the user property | replace <insert key> with a parameter key or delete where clause to select all)
+    (select value.float_value from unnest(user_properties) where key = '<insert key>') as user_float_value,
+    -- user_properties.value.double_value (metric | the double value of the user property | replace <insert key> with a parameter key or delete where clause to select all)
+    (select value.double_value from unnest(user_properties) where key = '<insert key>') as user_double_value,
+    -- user_properties.value.set_timestamp_micros (dimension | the time (in microseconds) at which the user property was last set | replace <insert key> with a parameter key or delete where clause to select all)
+    timestamp_micros((select value.set_timestamp_micros from unnest(user_properties) where key = '<insert key>')) as user_set_timestamp_micros,
+    -- user_ltv.revenue (metric | the lifetime value (revenue) of the user)
+    user_ltv.revenue as user_ltv_revenue,
+    -- user_ltv.currency (dimension | the lifetime value (currency) of the user)
+    user_ltv.currency as user_ltv_currency
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20201101'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))

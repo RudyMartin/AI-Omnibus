@@ -1,0 +1,16 @@
+select
+    case when (select value.int_value from unnest(event_params) where event_name = 'page_view' and key = 'entrances') = 1 then (select value.string_value from unnest(event_params) where event_name = 'page_view' and key = 'page_location') end as landing_page,
+    countif(event_name = 'page_view') as page_views
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20240701'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+group by
+    landing_page
+having
+    landing_page is not null
+order by
+    page_views desc

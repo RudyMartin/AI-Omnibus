@@ -1,0 +1,26 @@
+with prep as (
+select
+	user_pseudo_id,
+    (select value.int_value from unnest(event_params) where key = 'ga_session_id') as session_id,
+    array_agg((select value.string_value from unnest(event_params) where key = 'medium') ignore nulls order by event_timestamp)[safe_offset(0)] as medium
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20240701'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+group by
+    user_pseudo_id,
+    session_id)
+
+select
+	-- session medium (dimension | the value of a medium associated with a session)
+    coalesce(medium,'(none)') as medium_session,
+    count(distinct concat(user_pseudo_id,session_id)) as sessions
+from
+    prep
+group by
+    medium_session
+order by
+    sessions desc

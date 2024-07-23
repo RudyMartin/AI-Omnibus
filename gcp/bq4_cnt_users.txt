@@ -1,0 +1,97 @@
+select
+    -- users (metric | the total number of users)
+    count(distinct user_pseudo_id) as users
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+
+
+    select
+    count(distinct case when (select value.int_value from unnest(event_params) where key = 'engagement_time_msec') > 0  or (select value.string_value from unnest(event_params) where key = 'session_engaged') = '1' then user_pseudo_id else null end) as active_users
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+
+
+
+    select
+    count(distinct case when (select value.int_value from unnest(event_params) where key = 'ga_session_number') = 1 then user_pseudo_id else null end) / count(distinct user_pseudo_id) as percentage_new_users
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+
+
+    -- cnt sessions
+    select
+    count(distinct case when (select value.int_value from unnest(event_params) where key = 'ga_session_number') = 1 then concat(user_pseudo_id,(select value.int_value from unnest(event_params) where key = 'ga_session_id')) else null end) as new_sessions
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+
+
+-- cnt%  sessions
+
+    select
+    -- % new sessions (metric | the percentage of sessions by users who had never visited before)
+    count(distinct case when (select value.int_value from unnest(event_params) where key = 'ga_session_number') = 1 then concat(user_pseudo_id,(select value.int_value from unnest(event_params) where key = 'ga_session_id')) else null end) / count(distinct concat(user_pseudo_id,(select value.int_value from unnest(event_params) where key = 'ga_session_id'))) as percentage_new_sessions
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+
+
+-- sessions/user
+    select
+    -- number of sessions per user (metric | the total number of sessions divided by the total number of users)
+    count(distinct concat(user_pseudo_id,(select value.int_value from unnest(event_params) where key = 'ga_session_id'))) / count(distinct user_pseudo_id) as number_of_sessions_per_user
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+
+
+-- evnt count  total user
+    select
+    -- event count per user (metric | the number of times an individual event (change event_name 'page_view' to event that needs to be counted) was triggered divided by amount of users)
+    countif(event_name = 'page_view') / count(distinct user_pseudo_id) as event_count_per_user
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+
+
+--engaged session  / user
+    select
+    count(distinct case when (select value.string_value from unnest(event_params) where key = 'session_engaged') = '1' then concat(user_pseudo_id,(select value.int_value from unnest(event_params) where key = 'ga_session_id')) end) / count(distinct user_pseudo_id) as engaged_sessions_per_user
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))

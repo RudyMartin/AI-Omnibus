@@ -1,0 +1,9 @@
+select
+    count(distinct case when (select value.int_value from unnest(event_params) where key = 'engagement_time_msec') > 0  or (select value.string_value from unnest(event_params) where key = 'session_engaged') = '1' then user_pseudo_id else null end) as active_users
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20240701'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
