@@ -1,0 +1,32 @@
+select
+    -- collected_traffic_source.manual_campaign_id (dimension | the manual campaign id (utm_id) that was collected with the event)
+    collected_traffic_source.manual_campaign_id,
+    -- collected_traffic_source.manual_campaign_name (dimension | the manual campaign name (utm_campaign) that was collected with the event)
+    collected_traffic_source.manual_campaign_name,
+    -- collected_traffic_source.manual_source (dimension | the manual campaign source (utm_source) that was collected with the event)
+    collected_traffic_source.manual_source,
+    -- collected_traffic_source.manual_medium (dimension | the manual campaign medium (utm_medium) that was collected with the event)
+    collected_traffic_source.manual_medium,
+    -- collected_traffic_source.manual_term (dimension | the manual campaign keyword/term (utm_term) that was collected with the event)
+    collected_traffic_source.manual_term,
+    -- collected_traffic_source.manual_content (dimension | the additional manual campaign metadata (utm_content) that was collected with the event)
+    collected_traffic_source.manual_content,
+    -- collected_traffic_source.gclid (dimension | the Google click identifier that was collected with the event)
+    collected_traffic_source.gclid,
+    -- collected_traffic_source.dclid (dimension | the DoubleClick Click Identifier for Display and Video 360 and Campaign Manager 360 that was collected with the event)
+    collected_traffic_source.dclid,
+    -- collected_traffic_source.srsltid (dimension | the Google Merchant Center identifier that was collected with the event)
+    collected_traffic_source.srsltid,
+    -- collected_traffic_source.manual_source_platform (dimension | the manual campaign source platform (utm_source_platform) that was collected with the event)
+    collected_traffic_source.manual_source_platform,
+    -- collected_traffic_source.manual_creative_format (dimension | the manual campaign creative format (utm_creative_format) that was collected with the event)
+    collected_traffic_source.manual_creative_format,
+    -- collected_traffic_source.manual_marketing_tactic (dimension | the manual campaign marketing tactic (utm_marketing_tactic) that was collected with the event)
+    collected_traffic_source.manual_marketing_tactic
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20240701'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))

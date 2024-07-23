@@ -1,0 +1,11 @@
+select
+  privacy_info.analytics_storage,
+  privacy_info.ads_storage,
+  count(*) as events_total,
+  count(distinct user_pseudo_id) as users,
+  count(distinct concat(user_pseudo_id,(select value.int_value from unnest(event_params) where key = 'ga_session_id'))) as sessions
+from
+  `ga4bigquery.analytics_250794857.events_20240506`
+group by
+  analytics_storage,
+  ads_storage

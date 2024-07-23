@@ -1,0 +1,52 @@
+with prep as (
+select
+    user_pseudo_id,
+    (select value.int_value from unnest(event_params) where key = 'ga_session_id') as session_id,
+    array_agg((select value.string_value from unnest(event_params) where key = 'source') ignore nulls order by event_timestamp)[safe_offset(0)] as source,
+    array_agg((select value.string_value from unnest(event_params) where key = 'medium') ignore nulls order by event_timestamp)[safe_offset(0)] as medium,
+    array_agg((select value.string_value from unnest(event_params) where key = 'campaign') ignore nulls order by event_timestamp)[safe_offset(0)] as campaign
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20240701'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+group by
+    user_pseudo_id,
+    session_id)
+
+select
+    -- session default channel grouping (dimension | the channel group associated with a session) 
+  case
+    when (source is null or source = '(direct)') and (medium is null or medium in ('(not set)', '(none)')) then 'Direct'
+    when campaign like '%cross-network%' then 'Cross-network'
+    when (regexp_contains(source,'alibaba|amazon|google shopping|shopify|etsy|ebay|stripe|walmart')
+    or regexp_contains(campaign, '^(.*(([^a-df-z]|^)shop|shopping).*)$'))
+  and regexp_contains(medium, '^(.*cp.*|ppc|retargeting|paid.*)$') then 'Paid Shopping'
+    when regexp_contains(source,'baidu|bing|duckduckgo|ecosia|google|yahoo|yandex') and regexp_contains(medium,'^(.*cp.*|ppc|retargeting|paid.*)$') then 'Paid Search'
+    when regexp_contains(source,'badoo|facebook|fb|instagram|linkedin|pinterest|tiktok|twitter|whatsapp')
+  and regexp_contains(medium,'^(.*cp.*|ppc|retargeting|paid.*)$') then 'Paid Social'
+    when regexp_contains(source,'dailymotion|disneyplus|netflix|youtube|vimeo|twitch|vimeo|youtube') and regexp_contains(medium,'^(.*cp.*|ppc|retargeting|paid.*)$') then 'Paid Video'
+    when medium in ('display','banner','expandable','interstitial','cpm') then 'Display'
+    when regexp_contains(medium,'^(.*cp.*|ppc|retargeting|paid.*)$') then 'Paid Other'
+    when regexp_contains(source,'alibaba|amazon|google shopping|shopify|etsy|ebay|stripe|walmart') or regexp_contains(campaign, '^(.*(([^a-df-z]|^)shop|shopping).*)$') then 'Organic Shopping'
+    when regexp_contains(source,'badoo|facebook|fb|instagram|linkedin|pinterest|tiktok|twitter|whatsapp') or medium in ('social','social-network','social-media','sm','social network','social media') then 'Organic Social'
+    when regexp_contains(source,'dailymotion|disneyplus|netflix|youtube|vimeo|twitch|vimeo|youtube') or regexp_contains(medium,'^(.*video.*)$') then 'Organic Video'
+    when regexp_contains(source,'baidu|bing|duckduckgo|ecosia|google|yahoo|yandex') or medium = 'organic' then 'Organic Search'
+    when medium in ('referral','app','link') then 'Referral'
+    when regexp_contains(source,'email|e-mail|e_mail|e mail') or regexp_contains(medium,'email|e-mail|e_mail|e mail') then 'Email'
+    when medium = 'affiliate' then 'Affiliates'
+    when medium = 'audio' then 'Audio'
+    when source = 'sms' or medium = 'sms' then 'SMS'
+    when medium like '%push' or regexp_contains(medium,'mobile|notification') or source = 'firebase' then 'mobile push notifications'
+    else 'Unassigned'
+end
+  as channel_grouping_session,
+    count(distinct concat(user_pseudo_id,session_id)) as sessions
+from
+    prep
+group by
+    channel_grouping_session
+order by
+    sessions desc

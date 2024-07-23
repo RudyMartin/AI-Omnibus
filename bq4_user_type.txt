@@ -1,0 +1,18 @@
+select
+	-- user type (dimension | either new visitor or returning visitor, indicating if the users are new or returning)
+    case
+        when (select value.int_value from unnest(event_params) where event_name = 'session_start' and key = 'ga_session_number') = 1 then 'new visitor'
+        when (select value.int_value from unnest(event_params) where event_name = 'session_start' and key = 'ga_session_number') > 1 then 'returning visitor'
+        else null end as user_type,
+    count(distinct user_pseudo_id) as users
+from
+    -- change this to your google analytics 4 export location in bigquery
+    `ga4bigquery.analytics_250794857.events_*`
+where
+    -- define static and/or dynamic start and end date
+    _table_suffix between '20220901'
+    and format_date('%Y%m%d',date_sub(current_date(), interval 1 day))
+group by
+    user_type
+having
+    user_type is not null
