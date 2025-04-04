@@ -47,7 +47,7 @@ Companies winning with AI aren’t just optimizing existing KPIs — they’re *
 
 ---
 
-## 💡 Use in Your Materials
+## 💡 It's OK to Use this in Your Own Materials - just give us a credit or shoutout.
 
 ### Slide Titles You Could Use:
 - *“Scaling AI Responsibly: The New Competitive Edge”*
