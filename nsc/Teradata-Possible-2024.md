@@ -64,4 +64,6 @@ Companies winning with AI aren’t just optimizing existing KPIs — they’re *
 
 Let me know if you’d like a consultation  on  the themes here and how it impacts your organization.
 
-Rudy 
+Rudy Martin, Principal
+Next Shift Consulting
+
